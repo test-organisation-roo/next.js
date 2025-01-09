@@ -88,7 +88,10 @@ import {
   getSortedRouteObjects,
 } from '../shared/lib/router/utils'
 import type { __ApiPreviewProps } from '../server/api-utils'
-import loadConfig from '../server/config'
+import loadConfig, {
+  normalizeSerializableNextConfig,
+  type SerializableNextConfig,
+} from '../server/config'
 import type { BuildManifest } from '../server/get-page-files'
 import { normalizePagePath } from '../shared/lib/page-path/normalize-page-path'
 import { getPagePath } from '../server/require'
@@ -215,7 +218,7 @@ import {
   getParsedNodeOptionsWithoutInspect,
 } from '../server/lib/utils'
 import { InvariantError } from '../shared/lib/invariant-error'
-import { HTML_LIMITED_BOT_UA_ARRAY } from '../shared/lib/router/utils/is-bot'
+import { HTML_LIMITED_BOT_UA_RE } from '../shared/lib/router/utils/is-bot'
 
 type Fallback = null | boolean | string
 
@@ -529,7 +532,7 @@ async function writeFunctionsConfigManifest(
 
 interface RequiredServerFilesManifest {
   version: number
-  config: NextConfigComplete
+  config: SerializableNextConfig
   appDir: string
   relativeAppDir: string
   files: string[]
@@ -1313,11 +1316,12 @@ export default async function build(
       )
       const responseConfigManifest: {
         version: number
-        htmlLimitedBots: string[]
+        htmlLimitedBots: string
       } = {
         version: 0,
-        htmlLimitedBots:
-          config.experimental.htmlLimitedBots || HTML_LIMITED_BOT_UA_ARRAY,
+        htmlLimitedBots: (
+          config.experimental.htmlLimitedBots || HTML_LIMITED_BOT_UA_RE
+        ).source,
       }
       await writeManifest(responseConfigManifestPath, responseConfigManifest)
 
@@ -2472,7 +2476,7 @@ export default async function build(
 
           const serverFilesManifest: RequiredServerFilesManifest = {
             version: 1,
-            config: {
+            config: normalizeSerializableNextConfig({
               ...config,
               configFile: undefined,
               ...(ciEnvironment.hasNextSupport
@@ -2491,7 +2495,7 @@ export default async function build(
                 // @ts-expect-error internal field TODO: fix this, should use a separate mechanism to pass the info.
                 isExperimentalCompile: isCompileMode,
               },
-            },
+            }),
             appDir: dir,
             relativeAppDir: path.relative(outputFileTracingRoot, dir),
             files: [
