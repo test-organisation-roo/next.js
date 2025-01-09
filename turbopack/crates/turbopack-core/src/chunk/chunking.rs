@@ -122,7 +122,7 @@ pub async fn make_chunks(
 }
 
 type ChunkItemWithInfo = (
-    Vc<ChunkItemTy>,
+    ChunkItemTy,
     Vc<Box<dyn ChunkItem>>,
     Option<Vc<AsyncModuleInfo>>,
     usize,

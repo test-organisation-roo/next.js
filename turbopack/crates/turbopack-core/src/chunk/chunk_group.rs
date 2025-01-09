@@ -183,7 +183,7 @@ pub async fn make_chunk_group(
         .iter()
         .map(|(m, async_info)| {
             (
-                ChunkItemTy::Included.cell(),
+                ChunkItemTy::Included,
                 m.as_chunk_item(chunking_context),
                 *async_info,
             )
@@ -192,7 +192,7 @@ pub async fn make_chunk_group(
 
     chunk_items.extend(passthrough_modules.into_iter().map(|m| {
         (
-            ChunkItemTy::Passthrough.cell(),
+            ChunkItemTy::Passthrough,
             m.as_chunk_item(chunking_context),
             None,
         )

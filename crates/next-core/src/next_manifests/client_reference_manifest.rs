@@ -123,7 +123,7 @@ impl ClientReferenceManifest {
                         EcmascriptClientReferenceProxyModule,
                     >(parent_module)
                     .await?
-                    .expect("Expected EcmascriptClientReferenceProxyModule");
+                    .context("Expected EcmascriptClientReferenceProxyModule")?;
 
                     let rsc_chunk_item: Vc<Box<dyn ChunkItem>> =
                         rsc_module.as_chunk_item(Vc::upcast(ssr_chunking_context));
@@ -368,7 +368,7 @@ async fn is_item_async(
     availability_info: &AvailabilityInfo,
     module: Vc<Box<dyn ChunkableModule>>,
 ) -> Result<bool> {
-    let Some(available_chunk_items) = availability_info.available_modules() else {
+    let Some(available_modules) = availability_info.available_modules() else {
         return Ok(false);
     };
 
