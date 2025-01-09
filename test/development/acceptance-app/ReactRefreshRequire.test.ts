@@ -41,8 +41,7 @@ describe('ReactRefreshRequire app', () => {
 
     // We only edited Bar, and it accepted.
     // So we expect it to re-run alone.
-    await session.evaluate(() => ((window as any).log = []))
-    expect(await session.evaluate(() => (window as any).log)).toEqual([])
+    await resetLog(session)
 
     await session.patch(
       './bar.js',
@@ -54,8 +53,7 @@ describe('ReactRefreshRequire app', () => {
 
     // We only edited Bar, and it accepted.
     // So we expect it to re-run alone.
-    await session.evaluate(() => ((window as any).log = []))
-    expect(await session.evaluate(() => (window as any).log)).toEqual([])
+    await resetLog(session)
 
     await session.patch(
       './bar.js',
@@ -397,7 +395,7 @@ describe('ReactRefreshRequire app', () => {
 
     let didFullRefresh = false
     // Verify the child can accept itself:
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     didFullRefresh =
       didFullRefresh ||
       !(await session.patch(
@@ -410,7 +408,7 @@ describe('ReactRefreshRequire app', () => {
 
     // Now let's change the child to *not* accept itself.
     // We'll expect that now the parent will handle the evaluation.
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     didFullRefresh =
       didFullRefresh ||
       !(await session.patch(
@@ -457,7 +455,7 @@ describe('ReactRefreshRequire app', () => {
     expect(didFullRefresh).toBe(false)
 
     // But editing the child alone now doesn't reevaluate the parent.
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     didFullRefresh =
       didFullRefresh ||
       !(await session.patch(
@@ -498,3 +496,8 @@ describe('ReactRefreshRequire app', () => {
     // TODO:
   })
 })
+
+async function resetLog(session: any) {
+  await session.evaluate(() => ((window as any).log = []))
+  expect(await session.evaluate(() => (window as any).log)).toEqual([])
+}

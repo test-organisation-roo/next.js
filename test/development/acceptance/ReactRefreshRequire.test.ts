@@ -28,7 +28,7 @@ describe('ReactRefreshRequire', () => {
       `window.log.push('init BarV1'); export default function Bar() { return null; };`
     )
 
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     await session.patch(
       'index.js',
       `require('./foo'); export default function Noop() { return null; };`
@@ -40,7 +40,7 @@ describe('ReactRefreshRequire', () => {
 
     // We only edited Bar, and it accepted.
     // So we expect it to re-run alone.
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     await session.patch(
       './bar.js',
       `window.log.push('init BarV2'); export default function Bar() { return null; };`
@@ -51,7 +51,7 @@ describe('ReactRefreshRequire', () => {
 
     // We only edited Bar, and it accepted.
     // So we expect it to re-run alone.
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     await session.patch(
       './bar.js',
       `window.log.push('init BarV3'); export default function Bar() { return null; };`
@@ -88,7 +88,7 @@ describe('ReactRefreshRequire', () => {
 
     await session.write('./bar.js', `window.log.push('init BarV1');`)
 
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     await session.patch(
       'index.js',
       `require('./foo'); export default function Noop() { return null; };`
@@ -101,7 +101,7 @@ describe('ReactRefreshRequire', () => {
 
     // We edited Bar, but it doesn't accept.
     // So we expect it to re-run together with Foo which does.
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     await session.patch('./bar.js', `window.log.push('init BarV2');`)
     expect(await session.evaluate(() => (window as any).log)).toEqual([
       // // FIXME: Metro order:
@@ -116,7 +116,7 @@ describe('ReactRefreshRequire', () => {
 
     // We edited Bar, but it doesn't accept.
     // So we expect it to re-run together with Foo which does.
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     await session.patch('./bar.js', `window.log.push('init BarV3');`)
     expect(await session.evaluate(() => (window as any).log)).toEqual([
       // // FIXME: Metro order:
@@ -131,7 +131,7 @@ describe('ReactRefreshRequire', () => {
 
     // We edited Bar so that it accepts itself.
     // We still re-run Foo because the exports of Bar changed.
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     await session.patch(
       './bar.js',
       `
@@ -152,7 +152,7 @@ describe('ReactRefreshRequire', () => {
     ])
 
     // Further edits to Bar don't re-run Foo.
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     await session.patch(
       './bar.js',
       `
@@ -236,7 +236,7 @@ describe('ReactRefreshRequire', () => {
     )
 
     // Bootstrap:
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     await session.patch(
       'index.js',
       `require('./root'); export default function Noop() { return null; };`
@@ -252,7 +252,7 @@ describe('ReactRefreshRequire', () => {
 
     // We edited Leaf, but it doesn't accept.
     // So we expect it to re-run together with MiddleA and MiddleB which do.
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     await session.patch(
       'leaf.js',
       `log.push('init LeafV2'); export default {};`
@@ -264,7 +264,7 @@ describe('ReactRefreshRequire', () => {
     ])
 
     // Let's try the same one more time.
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     await session.patch(
       'leaf.js',
       `log.push('init LeafV3'); export default {};`
@@ -276,7 +276,7 @@ describe('ReactRefreshRequire', () => {
     ])
 
     // Now edit MiddleB. It should accept and re-run alone.
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     await session.patch(
       'middleB.js',
       `
@@ -292,7 +292,7 @@ describe('ReactRefreshRequire', () => {
     ])
 
     // Finally, edit MiddleC. It didn't accept so it should bubble to Root.
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
 
     await session.patch(
       'middleC.js',
@@ -391,7 +391,7 @@ describe('ReactRefreshRequire', () => {
 
     let didFullRefresh = false
     // Verify the child can accept itself:
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     didFullRefresh =
       didFullRefresh ||
       !(await session.patch(
@@ -404,7 +404,7 @@ describe('ReactRefreshRequire', () => {
 
     // Now let's change the child to *not* accept itself.
     // We'll expect that now the parent will handle the evaluation.
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     didFullRefresh =
       didFullRefresh ||
       !(await session.patch(
@@ -430,7 +430,7 @@ describe('ReactRefreshRequire', () => {
     ])
 
     // Change it back so that the child accepts itself.
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     didFullRefresh =
       didFullRefresh ||
       !(await session.patch(
@@ -451,7 +451,7 @@ describe('ReactRefreshRequire', () => {
     expect(didFullRefresh).toBe(false)
 
     // But editing the child alone now doesn't reevaluate the parent.
-    await session.evaluate(() => ((window as any).log = []))
+    await resetLog(session)
     didFullRefresh =
       didFullRefresh ||
       !(await session.patch(
@@ -492,3 +492,8 @@ describe('ReactRefreshRequire', () => {
     // TODO:
   })
 })
+
+async function resetLog(session: any) {
+  await session.evaluate(() => ((window as any).log = []))
+  expect(await session.evaluate(() => (window as any).log)).toEqual([])
+}
