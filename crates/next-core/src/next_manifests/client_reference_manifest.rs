@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use indoc::formatdoc;
 use turbo_rcstr::RcStr;
 use turbo_tasks::{FxIndexSet, ResolvedVc, TryJoinIterExt, Value, ValueToString, Vc};
@@ -372,7 +372,7 @@ async fn is_item_async(
         return Ok(false);
     };
 
-    let Some(info) = &*available_chunk_items.get(module).await? else {
+    let Some(info) = &*available_modules.get(module).await? else {
         return Ok(false);
     };
 
